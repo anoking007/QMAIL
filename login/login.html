@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- Chilling-->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>3SOS</title>
+    <link rel="stylesheet" href="styleLogin.css">
+  </head>
+  <body>
+    <div class="center">
+      <h1>Login</h1>
+      <form method="post" action="http://192.168.225.118:8080/auth/login"><!--specifies the URL where form data should be submitted-->
+        <div class="txt_field">
+          <input type="email" name="email" required>
+          <span></span>
+          <label>Email or Phone Number</label>
+        </div>
+        <div class="txt_field">
+          <input type="password" name="password" required>
+          <span></span>
+          <label>Password</label>
+        </div>
+        <div class="pass">Forgot Password?</div>
+        <input type="submit" name="submit" value="Login">
+        
+        <div class="signup_link" style="background-color: white;">
+            <!-- <a href="#">Sign-in</a>--><!--Now instead of this, make a button-->
+            <input type="submit" name="sign-in" value="Sign In With Google">
+        </div>
+        <div class="signup_link">
+            Not a member? <a href="#">Signup</a>
+        </div>
+      </form>
+
+    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the form from submitting normally
+
+            // Get form data
+            const formData = new FormData(form);
+            const email = formData.get('email');
+            const password = formData.get('password');
+
+            // API endpoint to send the POST request
+            const apiUrl = 'http://192.168.225.118:8080/auth/login';
+
+            try {
+                // Send POST request to the API
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                // Check if request was successful
+                if (response.ok) {
+                    const data = await response.json();
+                    // Handle successful response from the API
+                    console.log('Login successful:', data);
+                } else {
+                    // Handle error response from the API
+                    console.error('Login failed:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        });
+    });
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- Chilling at Bolt-->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>3SOS</title>
+    <link rel="stylesheet" href="signupstyle.css">
+  </head>
+  <body>
+    <div class="center">
+      <h1>Create Your Account</h1>
+      <form method="post">
+        <div class="txt_field">
+          <input type="text" name="username" required>
+          <span></span>
+          <label>Create Username</label>
+        </div>
+        <div class="txt_field">
+          <input type="password" name="password" required>
+          <span></span>
+          <label>Enter Password</label>
+        </div>
+        <div class="txt_field">
+            <input type="password" required>
+            <span></span>
+            <label>Re-enter Password</label>
+          </div>
+
+       <!-- <div class="pass">Forgot Password?</div>
+        <input type="submit" value="Login">-->
+        
+        <div class="signup_link" style="background-color: white;">
+            <!-- <a href="#">Sign-in</a>--><!--Now instead of this, make a button-->
+            <input type="submit" name="sign-in" value="Sign Up">
+        </div>
+        <div class="signup_link">
+            Already a member? <a href="#">Sign-in</a>
+        </div>
+      </form>
+    </div>
+    <script>
+      document.getElementById('signupForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+    
+        // Collect form data
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        //const confirmPassword = document.getElementById('confirmPasswordInput').value;
+    
+        // Check if passwords match
+        if (password !== confirmPassword) {
+          alert('Passwords do not match');
+          return; // Exit function if passwords do not match
+        }
+    
+        // Prepare data for POST request
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+    
+        // Send POST request to your API endpoint
+        fetch('your-api-endpoint-url', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          // Handle response from the server
+          if (response.ok) {
+            alert('Account created successfully');
+            // You may redirect the user to a new page or perform other actions here
+          } else {
+            alert('Failed to create account');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while creating the account');
+        });
+      });
+    </script>
+  </body>
+</html>
