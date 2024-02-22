@@ -241,6 +241,58 @@
             // Close the popup after sending email
             closePopup();
         }
+        // Function to open the popup
+        function openPopup() {
+            document.getElementById('emailPopup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        // Function to close the popup
+        function closePopup() {
+            document.getElementById('emailPopup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // Function to send email (replace with your actual email sending logic)
+        function sendEmail(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Retrieve form data
+            var recipient = document.getElementById('recipient').value;
+            var subject = document.getElementById('subject').value;
+            var message = document.getElementById('message').value;
+
+            // Constructing the JSON body
+            var body = JSON.stringify({
+                "senderMail": "", // Add sender email if necessary
+                "recipientMail": recipient,
+                "message": message
+            });
+
+            // Sending POST request
+            fetch('http://localhost:8080/send/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Handle success
+                console.log('Email sent successfully');
+                // You can add any additional handling here, such as showing a success message to the user
+            })
+            .catch(error => {
+                // Handle errors
+                console.error('There was a problem with the fetch operation:', error);
+                // You can add any additional error handling here, such as showing an error message to the user
+            });
+
+            // Close the popup after sending email
+            closePopup();}
     </script>
 
   </body>
