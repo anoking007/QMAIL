@@ -59,7 +59,7 @@
         formData.append('password', password);
     
         // Send POST request to your API endpoint
-        fetch('your-api-endpoint-url', {
+        fetch('http://localhost:8080/auth/register', {
           method: 'POST',
           body: formData
         })
