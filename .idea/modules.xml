@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/QMAIL.iml" filepath="$PROJECT_DIR$/.idea/QMAIL.iml" />
+      <module fileurl="file://$PROJECT_DIR$/QMAIL/kyberJCE.iml" filepath="$PROJECT_DIR$/QMAIL/kyberJCE.iml" />
     </modules>
   </component>
 </project>
