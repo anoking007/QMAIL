@@ -14,7 +14,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="kyberJCE" options="-parameters --add-exports java.base/sun.security.util=ALL-UNNAMED" />
+      <module name="kyberJCE" options="-parameters" />
     </option>
   </component>
 </project>
