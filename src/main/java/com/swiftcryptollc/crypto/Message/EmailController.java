@@ -1,22 +1,21 @@
 package com.swiftcryptollc.crypto.Message;
 
-import com.swiftcryptollc.crypto.provider.*;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.security.KeyPair;
+import javax.crypto.Cipher;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/send")
@@ -26,54 +25,45 @@ public class EmailController {
         return "Hello, Mock!";
     }
 
+
     private final EmailMessageRepository emailMessageRepository;
+    private final EmailService emailService;
 
     @Autowired
-    public EmailController(EmailMessageRepository emailMessageRepository) {
+    public EmailController(EmailMessageRepository emailMessageRepository, EmailService emailService) {
         this.emailMessageRepository = emailMessageRepository;
+        this.emailService = emailService;
     }
 
     @PostMapping("/send-email")
     public String sendEmail(@RequestBody EmailRequest request) {
         try {
+            byte[] publicKeyBytes = emailService.getPublicKeyByEmail(request.getSenderMail());
+            byte[] privateKeyBytes = emailService.getPrivateKeyByEmail(request.getSenderMail());
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+            PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+
+            // Send email and Encrypt
+            String secretMessage = request.getMessage();
+            Cipher encryptCipher = Cipher.getInstance("RSA");
+            encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            byte[] secretMessageBytes = secretMessage.getBytes(StandardCharsets.UTF_8);
+            byte[] encryptedMessageBytes = encryptCipher.doFinal(secretMessageBytes);
+            String encodedMessage = Base64.getEncoder().encodeToString(encryptedMessageBytes);
+
+            // Decryption
+            Cipher decryptCipher = Cipher.getInstance("RSA");
+            decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] decryptedMessageBytes = decryptCipher.doFinal(Base64.getDecoder().decode(encodedMessage));
+            String decryptedMessage = new String(decryptedMessageBytes, StandardCharsets.UTF_8);
             EmailMessage emailMessage = new EmailMessage();
             emailMessage.setSenderMail(request.getSenderMail());
             emailMessage.setRecipientMail(request.getRecipientMail());
-
-            Kyber1024KeyPairGenerator bobKeyGen1024 = new Kyber1024KeyPairGenerator();
-            KeyPair bobKeyPair = bobKeyGen1024.generateKeyPair();
-            KyberPublicKey bobPublicKey = (KyberPublicKey) bobKeyPair.getPublic();
-            KyberPrivateKey bobPrivateKey = (KyberPrivateKey) bobKeyPair.getPrivate();
-
-
-            Kyber1024KeyPairGenerator aliceKeyGen1024 = new Kyber1024KeyPairGenerator();
-            KeyPair aliceKeyPair = aliceKeyGen1024.generateKeyPair();
-            KyberPrivateKey alicePrivateKey = (KyberPrivateKey) aliceKeyPair.getPrivate();
-
-            byte[] bobEncodedPublicKey = bobPublicKey.getEncoded();
-
-            // Alice initiates a Key Agreement with Bob
-            KyberKeyAgreement aliceKeyAgreement = new KyberKeyAgreement();
-            aliceKeyAgreement.engineInit(alicePrivateKey);
-            // Generated CipherText and SecretKey from Bob's public Key and Alice's Private Key
-            KyberEncrypted aliceCipherSecret = (KyberEncrypted) aliceKeyAgreement.engineDoPhase(new KyberPublicKey(bobEncodedPublicKey), true);
-            KyberSecretKey aliceGeneratedSecretKey = aliceCipherSecret.getSecretKey();
-            KyberCipherText aliceCipherText = aliceCipherSecret.getCipherText();
-            System.out.println(aliceCipherText);
-            // Send Alice's generated encoded Cipher Text to Bob
-            // Bob initializes his own key agreement
-            byte[] aliceEncodedCipherText = aliceCipherText.getEncoded();
-            System.out.println(Arrays.toString(aliceEncodedCipherText));
-            KyberKeyAgreement bobKeyAgreement = new KyberKeyAgreement();
-            bobKeyAgreement.engineInit(bobPrivateKey);
-            // Decrypt the ciphertext back into the secret key
-            KyberDecrypted bobKyberDecrypted = (KyberDecrypted) bobKeyAgreement.engineDoPhase(new KyberCipherText(aliceEncodedCipherText), true);
-            System.out.println(bobKyberDecrypted);
-            KyberSecretKey bobGeneratedSecretKey = bobKyberDecrypted.getSecretKey();
-
-
-            emailMessage.setMessage(Arrays.toString(aliceEncodedCipherText));
-            emailMessage.setTimestamp(Timestamp.from(Instant.now()));
+            emailMessage.setMessage(encodedMessage);
+            emailMessage.setTimestamp(new Timestamp(System.currentTimeMillis()));
             emailMessageRepository.save(emailMessage);
             return "Email sent successfully";
         } catch (Exception ex) {
@@ -81,9 +71,5 @@ public class EmailController {
         }
     }
 
-    public KeyPair deserializeKeyPair(byte[] bytes) throws IOException, ClassNotFoundException {
-        ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        return (KeyPair) ois.readObject();
-    }
+
 }

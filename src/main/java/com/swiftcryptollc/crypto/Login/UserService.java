@@ -1,15 +1,14 @@
 package com.swiftcryptollc.crypto.Login;
 
-import com.swiftcryptollc.crypto.provider.Kyber1024KeyPairGenerator;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.security.KeyPair;
-import java.util.Arrays;
-import java.util.Base64;
+import java.security.*;
+import java.util.ArrayList;
 
 @Service
 public class UserService {
@@ -22,18 +21,22 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String signUp(String email, String password) throws IOException {
+    public String signUp(String email, String password) throws IOException, NoSuchAlgorithmException {
         if (userRepository.existsByEmail(email)) {
             return "Email already exists";
         }
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        Kyber1024KeyPairGenerator keyGen1024 = new Kyber1024KeyPairGenerator();
-        KeyPair keyPair = keyGen1024.generateKeyPair();
-        byte[] keyPairBytes = serializeKeyPair(keyPair);
-        String keyPairBase64String = Base64.getEncoder().encodeToString(keyPairBytes);
-        user.setKeyPairBlob(keyPairBase64String);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        KeyPair pair = generator.generateKeyPair();
+        PrivateKey privateKey = pair.getPrivate();
+        PublicKey publicKey = pair.getPublic();
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        byte[] privateKeyBytes = privateKey.getEncoded();
+        user.setPublicKeyBytes(publicKeyBytes);
+        user.setPrivateKeyBytes(privateKeyBytes);
         userRepository.save(user);
         return "User registered successfully";
     }
@@ -41,20 +44,13 @@ public class UserService {
     public String login(String email, String password) {
         // Find user by email
         User user = userRepository.findByEmail(email);
-
-        // Check if user exists and password matches
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return "Login successful";
         } else {
-            return "Invalid email or password";
+            return "Invalid credentials";
         }
     }
 
-    public byte[] serializeKeyPair(KeyPair keyPair) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(keyPair);
-        oos.flush();
-        return bos.toByteArray();
-    }
+
+
 }

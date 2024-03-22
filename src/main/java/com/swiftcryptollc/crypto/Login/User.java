@@ -1,8 +1,12 @@
 package com.swiftcryptollc.crypto.Login;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
@@ -13,32 +17,11 @@ public class User {
     @Column(name = "password", length = 255)
     private String password;
 
+    @Lob
+    @Column(name = "public_key_bytes", columnDefinition = "BLOB")
+    private byte[] publicKeyBytes;
 
-    @Column(name = "key_pair_blob")
-    private String keyPairBlob;
-
-    public String getKeyPairBlob() {
-        return keyPairBlob;
-    }
-
-    public void setKeyPairBlob(String keyPairBlob) {
-        this.keyPairBlob = keyPairBlob;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
+    @Lob
+    @Column(name = "private_key_bytes", columnDefinition = "BLOB")
+    private byte[] privateKeyBytes;
 }
